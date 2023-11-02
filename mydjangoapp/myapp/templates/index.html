@@ -1,0 +1,212 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link
+href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+rel="stylesheet"
+/>
+<title>Proyecto 2</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #upload-container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    #file-input {
+        border: 2px solid #ffffff;
+        padding: 10px;
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    #submit-button {
+        background-color: #ba004d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #submit-button:hover {
+        background-color: #6e36d6;
+    }
+
+    #ayuda-button:hover {
+        background-color: #6e36d6;
+    }
+
+    #getResponseButton:hover {
+        background-color: #6e36d6;
+    }
+
+    #ayuda-button {
+        background-color: #ba004d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+
+    }
+
+    #datos-button {
+        background-color: #ba004d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+
+    }
+
+    #datos-button:hover {
+        background-color: #6e36d6;
+    }
+
+    #documentacion-button {
+        background-color: #ba004d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+
+    }
+
+    #documentacion-button:hover {
+        background-color: #6e36d6;
+    }
+
+    #getResponseButton{
+        background-color: #ba004d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .opciones-container {
+    display: none;  /* Inicialmente oculto */
+    position: fixed;  /* Posicionado fijamente en la página */
+    left: 200;  /* Desde el lado izquierdo de la página */
+    width: 100%;  /* Ancho completo */
+    background-color: #f9f9f9;  /* Color de fondo */
+    border-bottom: 1px solid #ccc;  /* Borde inferior */
+    padding: 10px;  /* Espaciado interno */
+    z-index: 1000;  /* Asegura que el contenedor esté en la parte superior de otros elementos */
+    }
+
+    button {
+        margin: 5px;  
+    }
+</style>
+</head>
+    <body>
+        <div class="container mt-4">
+        <h1>Subir Archivos de Mensajes y Configuraciones</h1>
+        
+        <div id="upload-container" class="form-group mt-4">
+            <form method="POST" enctype="multipart/form-data" id="myform">
+                {% csrf_token %}
+                Mensajes: <input type="file" id="file-mensaje-input" name="file_mensaje" required><br>
+                Configuraciones: <input type="file" id="file-config-input" name="file_config" required><br>
+                <button id="submit-button" type="button">Analizar</button>
+            </form>
+        </div>
+        <div id="response" class="form-group mt-4">
+            <label for="fecha-inicio">Fecha Inicio:</label>
+            <input type="date" id="fecha-inicio" name="fecha-inicio" required>
+            
+            <label for="fecha-fin">Fecha Fin:</label>
+            <input type="date" id="fecha-fin" name="fecha-fin" required>
+
+            
+            <select id="opcion" name="opcion" required class="form-select form-select-sm" aria-label="Small select example">
+                <option selected>Seleccione una opcion</option>
+                <option value="Menciones">Menciones</option>
+                <option value="Hashtags">Hashtags</option>
+                <option value="Sentimientos">Sentimientos</option>
+            </select>
+        
+            <button type="button" id="getResponseButton">Consultar</button>
+            <textarea id="responseText" rows="10" cols="50"></textarea>
+        </div>   
+        <button id="ayuda-button" type="button">Ayuda</button>
+
+        <div id="opciones-adicionales" class="opciones-container">
+            <button id="datos-button" type="button">Datos Estudiante</button>
+            <button id="documentacion-button" type="button">Documentación</button>
+        </div>
+
+        <div id="xml-response" class="form-group mt-4"></div>
+    </div>
+
+
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $("#submit-button").click(function(e){
+                    e.preventDefault();
+                    var form = new FormData();
+                    form.append('file_mensaje', $("#file-mensaje-input")[0].files[0]);
+                    form.append('file_config', $("#file-config-input")[0].files[0]);
+                    var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+                    form.append('csrfmiddlewaretoken', csrfToken);
+
+                    $.ajax({
+                    type: "POST",
+                    url: "",
+                    data: form,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $("#response").html(response.mensaje);
+                        $("#xml-response").text(response.xml);
+                    },
+                    error: function(xhr, status, error) {
+                        $("#response").html("Error: " + error);
+                        $("#xml-response").text("Error: " + error);
+                    }
+                });
+            });
+                $("#getResponseButton").click(function() {
+                $("#responseText").val('');
+                var fechaInicio = $("#fecha-inicio").val();
+                var fechaFin = $("#fecha-fin").val();
+                var opcionSeleccionada = $("#opcion").val();
+                $.get("/myapp/get_Menciones", { inicio: fechaInicio, fin: fechaFin, opcion: opcionSeleccionada }, function(response)  {
+                    $("#responseText").val(response.mensaje);
+                });
+            });
+            $("#ayuda-button").click(function(){
+                $("#opciones-adicionales").toggle(); 
+            });
+            $("#datos-button").click(function(){
+                alert("Nombre: Rodrigo Sebastian Castro Aguilar \nCarnet: 202204496\nCurso: Introducción a la Programación y Computación 2\n\
+Carrera: Ingenieria en Ciencias y Sistemas\n4to Semestre")
+            });
+            $("#documentacion-button").click(function(){
+            window.open('https://drive.google.com/file/d/1S_kHEVL3H_-hdcRNIlN3cY8ZFe92Oow6/view?usp=sharing', '_blank');
+            });
+        })
+        </script>
+
+    </body>
+</html>
